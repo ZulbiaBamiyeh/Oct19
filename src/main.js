@@ -220,11 +220,18 @@ function renderEnd() {
     : el('p', { class: 'verdict bad' }, li === -1
       ? '🤥 Fooled! There was no lie yet. You won before it came up.'
       : `🤥 Fooled! The lie was question ${li + 1}: “${lieEntry.canonical}” was really ${ANSWER_LABEL[lieEntry.answer === 'y' ? 'n' : 'y']}.`);
-  const text = shareText(state, number, location.protocol.startsWith('http') ? location.origin + location.pathname : '');
+  const text = shareText(state, number, shareUrl());
   els.end.replaceChildren(headline, sub, verdict,
     el('pre', { class: 'share-preview' }, text),
     el('button', { class: 'primary', onclick: () => share(text) }, 'Share result'),
     el('p', { class: 'muted next' }, 'Next puzzle in ', el('span', { id: 'countdown' }, countdown())));
+}
+
+// <meta name="fib:share-url"> overrides the link in the share text (empty means no link).
+function shareUrl() {
+  const meta = document.querySelector('meta[name="fib:share-url"]');
+  if (meta) return meta.content;
+  return location.protocol.startsWith('http') ? location.origin + location.pathname : '';
 }
 
 function accuse(index) {
@@ -290,14 +297,12 @@ function toast(text) {
 
 async function share(text) {
   try {
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-      await navigator.share({ text });
-      return;
-    }
     await navigator.clipboard.writeText(text);
     toast('Copied to clipboard');
   } catch {
-    toast('Couldn’t copy. Select the text above instead.');
+    const preview = document.querySelector('.share-preview');
+    if (preview) getSelection().selectAllChildren(preview);
+    toast('Couldn’t copy automatically. The result is selected, so copy it yourself.');
   }
 }
 
