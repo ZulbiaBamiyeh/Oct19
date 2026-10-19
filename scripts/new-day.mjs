@@ -17,7 +17,7 @@ const { positionals, values } = parseArgs({
 });
 const [date, display] = positionals;
 if (!/^\d{4}-\d\d-\d\d$/.test(date ?? '') || !display) {
-  console.error('Usage: node scripts/new-day.mjs YYYY-MM-DD "a penguin" --aliases "penguin,penguins" [--close "puffin"] [--lie-at 1-8]');
+  console.error('Usage: node scripts/new-day.mjs YYYY-MM-DD "a penguin" --aliases "penguin,penguins" [--close "puffin"] [--lie-at 1-3]');
   process.exit(1);
 }
 
@@ -87,8 +87,9 @@ for (let i = 0; i < bank.length; i += BATCH) {
   console.log(`Answered ${Math.min(i + BATCH, bank.length)}/${bank.length}`);
 }
 
-const lieAt = values['lie-at'] ? Number(values['lie-at']) : randomInt(1, 9);
-if (!(lieAt >= 1 && lieAt <= 8)) throw new Error('--lie-at must be 1-8');
+// The liar lies on the lieAt-th big yes/no answer (see LIE_WINDOW in src/game.js).
+const lieAt = values['lie-at'] ? Number(values['lie-at']) : randomInt(1, 4);
+if (!(lieAt >= 1 && lieAt <= 3)) throw new Error('--lie-at must be 1-3');
 
 const day = {
   date,
@@ -108,4 +109,4 @@ index.add(date);
 writeFileSync(indexUrl, JSON.stringify([...index].sort()) + '\n');
 
 const counts = Object.values(answers).reduce((acc, a) => ({ ...acc, [a]: (acc[a] || 0) + 1 }), {});
-console.log(`Wrote data/days/${date}.json: ${JSON.stringify(counts)}, lie at yes/no answer #${lieAt}`);
+console.log(`Wrote data/days/${date}.json: ${JSON.stringify(counts)}, lie at big yes/no answer #${lieAt}`);

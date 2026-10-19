@@ -59,7 +59,7 @@ function dice(a, b) {
 export class Matcher {
   constructor(bank) {
     this.items = bank.flatMap((concept) =>
-      concept.q.map((text) => ({ concept: { id: concept.id, canonical: concept.q[0] }, text, toks: tokens(text) }))
+      concept.q.map((text) => ({ concept: { id: concept.id, canonical: concept.q[0], big: !!concept.big }, text, toks: tokens(text) }))
     );
     this.vectors = null; // Float32Array, items.length x dim, L2-normalised
     this.dim = 0;

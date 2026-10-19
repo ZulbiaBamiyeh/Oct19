@@ -12,7 +12,10 @@ const bank = read('data/bank.json');
 const days = read('data/days/index.json').map((d) => read(`data/days/${d}.json`));
 const day = days.find((d) => d.date === '2026-10-19');
 const matcher = new Matcher(bank);
-const concept = (id) => ({ id, canonical: bank.find((c) => c.id === id).q[0] });
+const concept = (id) => {
+  const c = bank.find((x) => x.id === id);
+  return { id, canonical: c.q[0], big: !!c.big };
+};
 
 test('every day answers every bank question', () => {
   const files = readdirSync(new URL('../data/days/', import.meta.url)).filter((f) => /^\d{4}-\d\d-\d\d\.json$/.test(f));
@@ -22,7 +25,7 @@ test('every day answers every bank question', () => {
   for (const d of days) {
     for (const id of ids) assert.match(d.answers[id] ?? '', /^[ynsx]$/, `${d.date} is missing ${id}`);
     for (const id of Object.keys(d.answers)) assert.ok(ids.has(id), `${d.date} answers unknown ${id}`);
-    assert.ok(d.lieAt >= 1 && d.lieAt <= 8, `${d.date} lieAt out of range`);
+    assert.ok(d.lieAt >= 1 && d.lieAt <= 3, `${d.date} lieAt out of range`);
   }
 });
 
@@ -35,17 +38,32 @@ test('no phrasing appears in two concepts', () => {
   }
 });
 
-test('the lieAt-th yes/no answer is flipped, others are true', () => {
+test('the liar flips the lieAt-th big yes/no answer and nothing else', () => {
+  const s = createGame(day); // lieAt is 3
+  const ids = ['alive', 'tall', 'place', 'man_made', 'castle', 'building', 'bigger_car'];
+  const [alive, tall, place, manMade, castle, building, biggerCar] = ids.map((id) => ask(s, day, concept(id), id).entry);
+  assert.deepEqual([alive.answer, alive.bigIndex], ['n', 1]);
+  assert.equal(tall.answer, 'y'); // small questions are always true
+  assert.equal(tall.bigIndex, undefined);
+  assert.equal(place.answer, 's'); // big, but "sort of" answers don't count
+  assert.equal(place.bigIndex, undefined);
+  assert.deepEqual([manMade.answer, manMade.bigIndex], ['y', 2]);
+  assert.equal(castle.answer, 'n');
+  assert.deepEqual([building.answer, building.bigIndex, building.lie], ['n', 3, true]); // truth is y
+  assert.deepEqual([biggerCar.answer, biggerCar.lie], ['y', false]);
+  assert.equal(s.entries.filter((e) => e.lie).length, 1);
+});
+
+test('only small questions means the liar never strikes', () => {
   const s = createGame(day);
-  const ids = ['alive', 'place', 'man_made', 'building', 'bigger_car', 'food']; // place is "sort of"
-  const answers = ids.map((id) => ask(s, day, concept(id), id).entry);
-  assert.equal(answers[0].answer, 'n'); // yn #1
-  assert.equal(answers[1].answer, 's'); // not a yes/no, doesn't count
-  assert.equal(answers[2].answer, 'y'); // yn #2
-  assert.equal(answers[3].answer, 'n'); // yn #3 = lieAt 3, truth is y
-  assert.ok(answers[3].lie);
-  assert.equal(answers[4].answer, 'y');
-  assert.equal(answers.filter((e) => e.lie).length, 1);
+  for (const id of ['tall', 'castle', 'tower', 'gives_light', 'near_water', 'climb']) ask(s, day, concept(id), id);
+  assert.ok(s.entries.every((e) => !e.lie && e.answer === day.answers[e.id]));
+});
+
+test('the bank tags a sensible set of big questions', () => {
+  const big = bank.filter((c) => c.big).map((c) => c.id);
+  assert.ok(big.length >= 30, `only ${big.length} big questions`);
+  for (const id of ['alive', 'man_made', 'bigger_car', 'food', 'person']) assert.ok(big.includes(id), id);
 });
 
 test('asking the same concept again is free and repeats the lie', () => {
@@ -84,7 +102,7 @@ test('naming the lie', () => {
   const s = createGame(day);
   for (const id of ['alive', 'man_made', 'building', 'tall']) ask(s, day, concept(id), id);
   guess(s, day, 'lighthouse');
-  assert.equal(lieCandidates(s).length, 4);
+  assert.equal(lieCandidates(s).length, 3); // tall is a small question
   assert.equal(pickLie(s, 1), false);
   assert.equal(pickLie(s, 2), true);
 

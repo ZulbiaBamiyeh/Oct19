@@ -1,7 +1,9 @@
 // Pure game state for Fib. No DOM access here, so it can be tested in Node.
 
 export const MAX_QUESTIONS = 20;
-export const LIE_WINDOW = 8; // the lie is one of the first N yes/no answers
+// The liar only lies on big questions (broad ones like "Is it alive?", tagged in the bank),
+// on the day's lieAt-th big yes/no answer. So the lie is one of the first LIE_WINDOW big answers.
+export const LIE_WINDOW = 3;
 
 export const ANSWER_LABEL = { y: 'Yes', n: 'No', s: 'Sort of', x: "Doesn't apply" };
 const ANSWER_EMOJI = { y: '🟢', n: '🔴', s: '🟡', x: '⚪' };
@@ -49,7 +51,7 @@ export function isClose(day, text) {
 }
 
 export function createGame(day) {
-  return { date: day.date, entries: [], ynCount: 0, status: 'playing', liePick: undefined };
+  return { date: day.date, entries: [], bigCount: 0, status: 'playing', liePick: undefined };
 }
 
 export const questionsUsed = (state) => state.entries.length;
@@ -59,7 +61,7 @@ function finishIfOut(state) {
   if (state.status === 'playing' && questionsUsed(state) >= MAX_QUESTIONS) state.status = 'lost';
 }
 
-// concept: { id, canonical } from the matcher. Asking the same concept twice
+// concept: { id, canonical, big } from the matcher. Asking the same concept twice
 // returns the earlier entry (lie included) and costs nothing.
 export function ask(state, day, concept, askedText) {
   if (state.status !== 'playing') throw new Error('Game is over');
@@ -67,11 +69,11 @@ export function ask(state, day, concept, askedText) {
   if (previous) return { repeat: true, entry: previous };
 
   const truth = day.answers[concept.id] ?? 'x';
-  const entry = { kind: 'answer', id: concept.id, canonical: concept.canonical, asked: askedText, answer: truth, lie: false };
-  if (truth === 'y' || truth === 'n') {
-    state.ynCount += 1;
-    entry.ynIndex = state.ynCount;
-    if (state.ynCount === day.lieAt) {
+  const entry = { kind: 'answer', id: concept.id, canonical: concept.canonical, big: !!concept.big, asked: askedText, answer: truth, lie: false };
+  if (concept.big && (truth === 'y' || truth === 'n')) {
+    state.bigCount += 1;
+    entry.bigIndex = state.bigCount;
+    if (state.bigCount === day.lieAt) {
       entry.answer = FLIP[truth];
       entry.lie = true;
     }
@@ -95,7 +97,7 @@ export function guess(state, day, text) {
 export function lieCandidates(state) {
   return state.entries
     .map((entry, index) => ({ entry, index }))
-    .filter(({ entry }) => entry.kind === 'answer' && entry.ynIndex && entry.ynIndex <= LIE_WINDOW);
+    .filter(({ entry }) => entry.kind === 'answer' && entry.bigIndex && entry.bigIndex <= LIE_WINDOW);
 }
 
 export const lieIndex = (state) => state.entries.findIndex((e) => e.lie);

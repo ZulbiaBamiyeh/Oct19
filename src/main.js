@@ -41,7 +41,7 @@ async function loadDay() {
 
 const [{ day, stale }, bank] = await Promise.all([loadDay(), getJSON('data/bank.json')]);
 const number = dayNumber(day.date);
-const stateKey = `fib-state:${day.date}`;
+const stateKey = `fib-state-v2:${day.date}`; // v2: the liar only lies on big questions
 const state = store.get(stateKey, null) ?? createGame(day);
 const matcher = new Matcher(bank);
 const save = () => store.set(stateKey, state);
@@ -170,9 +170,10 @@ function entryRow(entry, i, { reveal = false } = {}) {
   const badge = isGuess
     ? el('span', { class: `ans ${entry.correct ? 'ans-win' : 'ans-wrong'}` }, entry.correct ? 'Correct!' : entry.close ? 'Close, but no' : 'No')
     : el('span', { class: `ans ans-${entry.answer}` }, ANSWER_LABEL[entry.answer]);
-  return el('li', { class: `entry${reveal && entry.lie ? ' is-lie' : ''}${entry.ynIndex && entry.ynIndex <= LIE_WINDOW ? ' in-zone' : ''}` },
+  return el('li', { class: `entry${reveal && entry.lie ? ' is-lie' : ''}${entry.bigIndex && entry.bigIndex <= LIE_WINDOW ? ' in-zone' : ''}` },
     el('span', { class: 'num' }, String(i + 1)),
-    el('div', { class: 'q' }, title, !isGuess && !sameText ? el('small', {}, `you asked “${entry.asked}”`) : null),
+    el('div', { class: 'q' }, entry.big ? el('span', { class: 'big', title: 'Big question: the liar can lie here' }, '⚡') : null,
+      title, !isGuess && !sameText ? el('small', {}, `you asked “${entry.asked}”`) : null),
     badge,
     reveal && entry.lie ? el('span', { class: 'lie-tag' }, `🤥 really ${ANSWER_LABEL[entry.answer === 'y' ? 'n' : 'y']}`) : null);
 }
@@ -183,10 +184,10 @@ function render() {
   els.empty.hidden = state.entries.length > 0;
   els.left.textContent = `${questionsLeft(state)} of ${MAX_QUESTIONS} questions left`;
   els.lieZone.textContent =
-    state.ynCount < LIE_WINDOW
-      ? `🤥 Lie zone: ${state.ynCount}/${LIE_WINDOW} yes/no answers so far`
-      : '✅ Lie zone over. Every answer from here on is true.';
-  els.lieZone.classList.toggle('done', state.ynCount >= LIE_WINDOW);
+    state.bigCount < LIE_WINDOW
+      ? `⚡ Big answers: ${state.bigCount}/${LIE_WINDOW}. One of the first ${LIE_WINDOW} is a lie`
+      : '✅ The liar has had its chance. Every answer from here on is true.';
+  els.lieZone.classList.toggle('done', state.bigCount >= LIE_WINDOW);
   els.form.hidden = over;
   if (over) renderEnd();
   else els.end.hidden = true;
@@ -203,12 +204,12 @@ function renderEnd() {
   if (state.liePick === undefined) {
     const choices = lieCandidates(state).map(({ entry, index }) =>
       el('button', { class: 'choice', onclick: () => accuse(index) },
-        el('span', { class: 'num' }, String(index + 1)), el('span', {}, entry.canonical),
+        el('span', { class: 'num' }, String(index + 1)), el('span', {}, `⚡ ${entry.canonical}`),
         el('span', { class: `ans ans-${entry.answer}` }, ANSWER_LABEL[entry.answer])));
     els.end.replaceChildren(headline, sub,
       el('h3', {}, 'Which answer was the lie?'),
       el('div', { class: 'choices' }, choices,
-        el('button', { class: 'choice none', onclick: () => accuse(null) }, 'None of them. The lie never came up.')));
+        el('button', { class: 'choice none', onclick: () => accuse(null) }, 'None. I finished before the liar struck.')));
     return;
   }
 
@@ -216,9 +217,9 @@ function renderEnd() {
   const li = lieIndex(state);
   const lieEntry = state.entries[li];
   const verdict = caught
-    ? el('p', { class: 'verdict good' }, li === -1 ? '🕵️ Right: you finished before the lie came up.' : `🕵️ You caught it! Question ${li + 1} was the lie.`)
+    ? el('p', { class: 'verdict good' }, li === -1 ? '🕵️ Right: you finished before the liar struck.' : `🕵️ You caught it! Question ${li + 1} was the lie.`)
     : el('p', { class: 'verdict bad' }, li === -1
-      ? '🤥 Fooled! There was no lie yet. You won before it came up.'
+      ? '🤥 Fooled! The liar never struck. You finished before it got the chance.'
       : `🤥 Fooled! The lie was question ${li + 1}: “${lieEntry.canonical}” was really ${ANSWER_LABEL[lieEntry.answer === 'y' ? 'n' : 'y']}.`);
   const text = shareText(state, number, shareUrl());
   els.end.replaceChildren(headline, sub, verdict,
@@ -351,7 +352,7 @@ async function onAsk(text) {
   const guessButton = nounGuess && el('button', { class: 'secondary', onclick: () => doGuess(nounGuess) }, `Guess “${nounGuess}”`);
   if (r.kind === 'match') return doAsk(r.concept, text);
   if (r.kind === 'suggest') {
-    return showNotice(`Did you mean: ${r.phrase}`, [
+    return showNotice(`Did you mean: ${r.concept.big ? '⚡ ' : ''}${r.phrase}`, [
       el('button', { class: 'primary', onclick: () => doAsk(r.concept, text) }, 'Yes, ask that'),
       guessButton,
       el('button', { class: 'ghost', onclick: rephrase }, 'Rephrase'),

@@ -2,7 +2,7 @@
 
 A daily game of 20 Questions where one of the answers is a lie.
 
-Everyone gets the same secret each day. You ask yes/no questions in your own words, and one of the first 8 yes/no answers is a lie. Find the secret, then name the lie.
+Everyone gets the same secret each day. You ask yes/no questions in your own words. The liar lies exactly once, on one of your first 3 **big questions**: the broad ones like "Is it alive?" or "Is it bigger than a car?", marked ⚡. Small, specific questions are always true. Big questions are efficient but risky; small ones are safe but slow. Find the secret, then name the lie.
 
 ```
 Fib #1 🎯 11/20 · 🕵️ caught the lie
@@ -23,8 +23,8 @@ Any static host works (GitHub Pages, Netlify, Cloudflare Pages).
 
 ## How it works without an LLM at runtime
 
-- **`data/bank.json`** is a shared bank of about 320 question *concepts*, each with a few phrasings ("Is it alive?", "Is it a living thing?", …).
-- **`data/days/<date>.json`** holds one day's secret plus a precomputed answer for every concept: `y`, `n`, `s` (sort of) or `x` (doesn't apply). It also stores `lieAt`, meaning the Nth yes/no answer is flipped.
+- **`data/bank.json`** is a shared bank of about 320 question *concepts*, each with a few phrasings ("Is it alive?", "Is it a living thing?", …). About 50 broad ones are tagged `"big": true`; those are the only ones the liar can lie on.
+- **`data/days/<date>.json`** holds one day's secret plus a precomputed answer for every concept: `y`, `n`, `s` (sort of) or `x` (doesn't apply). It also stores `lieAt` (1-3): the liar flips the player's lieAt-th big yes/no answer. "Sort of" answers are never lies.
 - **In the browser**, a small sentence-embedding model (`Xenova/all-MiniLM-L6-v2`, run by transformers.js in a Web Worker) matches whatever the player typed to the closest phrasing in the bank. Close-but-unsure matches get a "Did you mean…?" prompt. Unmatched questions ask the player to rephrase, so a bad match never silently gives a wrong answer.
 - **Until the model loads**, or if it can't, a keyword matcher handles questions instead. The status line under the input shows which one is active.
 - **Asking the same concept twice is free** and returns the same answer, lie included. Players catch the lie by asking *different* questions that check each other.

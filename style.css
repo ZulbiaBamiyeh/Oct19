@@ -269,3 +269,5 @@ dialog li { margin-bottom: 6px; }
 .tile span { font-size: 0.75rem; color: var(--muted); text-align: center; }
 
 [hidden] { display: none !important; }
+
+.q .big { margin-right: 4px; }
