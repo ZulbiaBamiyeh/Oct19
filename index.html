@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fib</title>
+  <meta name="description" content="A daily game of 20 questions where one of the answers is a lie.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤥</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <header>
+    <button id="help-btn" class="icon" aria-label="How to play">?</button>
+    <h1>Fib <span id="puzzle-number"></span></h1>
+    <button id="stats-btn" class="icon" aria-label="Stats">▦</button>
+  </header>
+
+  <main>
+    <p class="tagline">20 yes/no questions to find today’s secret. <strong>One answer is a lie.</strong></p>
+
+    <div class="meters">
+      <span id="left"></span>
+      <span id="lie-zone"></span>
+    </div>
+
+    <p id="empty" class="empty">Start broad: “Is it alive?”, “Is it bigger than a car?”, “Can you eat it?”</p>
+    <ol id="log" class="log"></ol>
+
+    <section id="end" class="end" hidden></section>
+  </main>
+
+  <footer>
+    <div id="notice" class="notice" hidden></div>
+    <form id="ask-form" autocomplete="off">
+      <input id="question" type="text" placeholder="Ask a yes/no question…" enterkeyhint="send" maxlength="120" aria-label="Your question">
+      <button type="submit" class="primary">Ask</button>
+      <button type="button" id="guess-btn" class="secondary">Guess</button>
+    </form>
+    <p id="match-status" class="match-status" data-kind="off">Basic matching</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <dialog id="help">
+    <h2>How to play</h2>
+    <p>Everyone gets the same secret each day: a thing, a place, an animal or a person.</p>
+    <ul>
+      <li>Ask up to <strong>20</strong> yes/no questions in your own words.</li>
+      <li>Answers are <span class="ans ans-y">Yes</span> <span class="ans ans-n">No</span> <span class="ans ans-s">Sort of</span> or <span class="ans ans-x">Doesn't apply</span>.</li>
+      <li><strong>One of the first 8 yes/no answers is a lie.</strong> Ask questions that check each other.</li>
+      <li>Type your answer and press <strong>Guess</strong> when you know it. Wrong guesses cost a question.</li>
+      <li>When you finish, name the lie for bonus bragging rights.</li>
+    </ul>
+    <p class="muted">Asking the same thing twice is free, but you’ll get the same answer, lie included.</p>
+    <button class="primary" data-close>Play</button>
+  </dialog>
+
+  <dialog id="stats">
+    <h2>Your stats</h2>
+    <div id="stats-body" class="tiles"></div>
+    <button class="primary" data-close>Close</button>
+  </dialog>
+</body>
+</html>

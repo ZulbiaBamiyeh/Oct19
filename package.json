@@ -1,0 +1,14 @@
+{
+  "name": "fib",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/test.mjs",
+    "serve": "python3 -m http.server 8080",
+    "new-day": "node scripts/new-day.mjs"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@huggingface/transformers": "3.7.6"
+  }
+}
