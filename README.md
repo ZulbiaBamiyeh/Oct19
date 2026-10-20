@@ -60,3 +60,17 @@ Check the generated answers by hand before publishing, because they *are* the pu
 
 - **The embedding thresholds are uncalibrated** (`SEMANTIC` in `src/matcher.js`: accept ≥ 0.80, suggest ≥ 0.55). Tune them by playing with smart matching on and watching for wrong matches.
 - The bank was written around today's secret and needs broader coverage for people and animals.
+
+---
+
+# Polymath
+
+`polymath/` is a second game: head-to-head trivia in the style of the old QuizUp, limited to science, medicine, biology, animals and ancient history.
+
+- **7 rounds, 10 seconds each.** A right answer scores up to 20 points, less the slower you are. The last round counts double.
+- **You race recorded games.** Every finished game is saved with its answers and timings, and the next player in that topic is matched against it at the same speed. If nobody has played a topic yet, you face a bot, which is always labelled as one.
+- **Challenge links** let a friend play against your exact game.
+- **Questions** live in `polymath/questions.json`: 154 questions across 5 topics, each with a one-line fact shown after the answer.
+- **Storage** uses the claude.ai artifact database when it runs as an artifact. Opened as a plain web page, it plays bots only.
+
+Run it with `npm run serve` and open http://localhost:8080/polymath/. `polymath/duel.js` holds the rules and is tested by `npm test`.
