@@ -74,3 +74,15 @@ Check the generated answers by hand before publishing, because they *are* the pu
 - **Storage** uses the claude.ai artifact database when it runs as an artifact. Opened as a plain web page, it plays bots only.
 
 Run it with `npm run serve` and open http://localhost:8080/polymath/. `polymath/duel.js` holds the rules and is tested by `npm test`.
+
+---
+
+# Eyes On Your Own Paper
+
+`exam/` is a 3D stealth game built with three.js. You haven't revised, the exam (Advanced Nonsense, Higher Tier) makes no sense, and the only way to pass is to cheat without Mrs Grimsby noticing.
+
+- **Ways to cheat:** lean and squint at Priya's paper (always right, writes faintly, flips her paper over if you stare too long), Marcus's (half right, sometimes covers it with his arm) or Dave's (huge confident letters, but he's on Paper B). Your phone has texts from Jess, but it buzzes unless you've checked it. Your water bottle label has notes on the back. Her mug gives away her middle name. Paper balls send her off to investigate.
+- **Getting caught:** a suspicion meter fills when she can see you doing something suspicious, and drains while you look at your own paper. Three warnings and you're out.
+- **Endings:** 8 report-card endings, remembered in the browser.
+
+Run it with `npm run serve` and open http://localhost:8080/exam/. Everything is in `exam/game.js`; sound and voices are synthesised, so there are no asset files.
